@@ -1,0 +1,21 @@
+diff --git a/libntfs-3g/dir.c b/libntfs-3g/dir.c
+index 5cab5c5..7750e20 100644
+--- a/libntfs-3g/dir.c
++++ b/libntfs-3g/dir.c
+@@ -1313,7 +1313,15 @@ skip_index_root:
+ 		goto err_out;
+ 	}
+ 
+-	bmp_buf_pos = 0;
++	/*
++	 * USBRW patch(upstream bug):断点续枚举(*pos 落在索引分配区
++	 * 中间)时 bmp_pos 从续点块号开始,而 bmp_buf_pos 若从 0 开始,
++	 * 两者在 find_next_index_buffer 里同步自增后,被测试的位图比特
++	 * 与 bmp_pos 不再对应(差 bmp_pos&7),会把「下一个已用块」误判
++	 * 成功,进而读取不存在的索引块报 EIO。
++	 * 正确初值:bmp_buf_pos = bmp_pos & 7(位图块按 8 块/字节)。
++	 */
++	bmp_buf_pos = bmp_pos & 7;
+ 	/* If the index block is not in use find the next one that is. */
+ 	while (!(bmp[bmp_buf_pos >> 3] & (1 << (bmp_buf_pos & 7)))) {
+ find_next_index_buffer:

@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<!-- fskitd(macOS 26)按此键过滤 fsmodule:声明低于本世代(15.4)
+	     的扩展被静默排除在模块表外(26.6.2 实测)。 -->
+	<key>LSMinimumSystemVersion</key>
+	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>XPC!</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.1.0</string>
+	<key>CFBundleVersion</key>
+	<string>2</string>
+	<key>EXAppExtensionAttributes</key>
+	<dict>
+		<key>EXExtensionPointIdentifier</key>
+		<string>com.apple.fskit.fsmodule</string>
+
+		<!-- 挂载/检查/格式化的选项语法(对齐 mount(8) 习惯) -->
+		<key>FSActivateOptionSyntax</key>
+		<dict>
+			<key>shortOptions</key>
+			<string>g:m:o:u:</string>
+		</dict>
+		<key>FSCheckOptionSyntax</key>
+		<dict>
+			<key>shortOptions</key>
+			<string>nqy</string>
+		</dict>
+		<key>FSFormatOptionSyntax</key>
+		<dict>
+			<key>shortOptions</key>
+			<string>v</string>
+		</dict>
+
+		<!-- 媒体类型声明:值必须是字典(含 FSMediaProperties),写成纯字符串会让
+		     diskarbitrationd 在深拷贝时抛 NSInvalidArgumentException 并崩溃循环
+		     (macOS 15.7.9 实测,连崩 14 次)。格式对照内置 ntfs.fs 的 Info.plist。
+		     同时声明 GPT Microsoft Basic Data 分区 GUID,覆盖按 GUID 识别的 NTFS 卷。
+		     FSProbeOrder=500 抢在内置只读 ntfs.fs(其 Windows_NTFS 顺序为 1000)之前
+		     参与探测;UserFS 模块的探测在扩展进程内进行(probeResource),无需
+		     FSProbeExecutable。
+		     Partitionless(superfloppy/裸镜像):content hint 只在设备无分区表时
+		     命中,GPT/MBR 整盘分别报 GUID_partition_scheme/FDisk_partition_scheme,
+		     不会流入本键——对物理分区盘认领零影响。Leaf+Whole 双 true 与 usbrw.util
+		     组合探针(NTFS/ext 双签名)均对照内置 ntfs.fs 的 Partitionless 写法。 -->
+		<key>FSMediaTypes</key>
+		<dict>
+			<key>Partitionless</key>
+			<dict>
+				<key>FSMediaProperties</key>
+				<dict>
+					<key>Leaf</key>
+					<true/>
+					<key>Whole</key>
+					<true/>
+				</dict>
+				<key>FSProbeArguments</key>
+				<string>-p</string>
+				<key>FSProbeExecutable</key>
+				<string>usbrw.util</string>
+				<key>FSProbeOrder</key>
+				<integer>500</integer>
+			</dict>
+			<key>Windows_NTFS</key>
+			<dict>
+				<key>FSMediaProperties</key>
+				<dict>
+					<key>Content Hint</key>
+					<string>Windows_NTFS</string>
+					<key>Leaf</key>
+					<true/>
+				</dict>
+				<key>FSProbeArguments</key>
+				<string>-p</string>
+				<key>FSProbeExecutable</key>
+				<string>ntfs3g.util</string>
+				<key>FSProbeOrder</key>
+				<integer>500</integer>
+			</dict>
+			<!-- ext2/3/4:GPT Linux 文件系统 GUID + MBR 0x83(Linux) -->
+			<key>0FC63DAF-8483-4772-8E79-3D69D8477DE4</key>
+			<dict>
+				<key>FSMediaProperties</key>
+				<dict>
+					<key>Content Hint</key>
+					<string>0FC63DAF-8483-4772-8E79-3D69D8477DE4</string>
+					<key>Leaf</key>
+					<true/>
+				</dict>
+				<key>FSProbeArguments</key>
+				<string>-p</string>
+				<key>FSProbeExecutable</key>
+				<string>ext4.util</string>
+				<key>FSProbeOrder</key>
+				<integer>500</integer>
+			</dict>
+			<key>Linux_FileSystem</key>
+			<dict>
+				<key>FSMediaProperties</key>
+				<dict>
+					<key>Content Hint</key>
+					<string>Linux</string>
+					<key>Leaf</key>
+					<true/>
+				</dict>
+				<key>FSProbeArguments</key>
+				<string>-p</string>
+				<key>FSProbeExecutable</key>
+				<string>ext4.util</string>
+				<key>FSProbeOrder</key>
+				<integer>500</integer>
+			</dict>
+			<key>EBD0A0A2-B9E5-4433-87C0-68B6B72699C7</key>
+			<dict>
+				<key>FSMediaProperties</key>
+				<dict>
+					<key>Content Hint</key>
+					<string>EBD0A0A2-B9E5-4433-87C0-68B6B72699C7</string>
+					<key>Leaf</key>
+					<true/>
+				</dict>
+				<key>FSProbeArguments</key>
+				<string>-p</string>
+				<key>FSProbeExecutable</key>
+				<string>ntfs3g.util</string>
+				<key>FSProbeOrder</key>
+				<integer>500</integer>
+			</dict>
+		</dict>
+
+		<key>FSPersonalities</key>
+		<dict>
+			<key>EXT4</key>
+			<dict>
+				<key>FSName</key>
+				<string>ext4</string>
+			</dict>
+			<key>NTFS3G</key>
+			<dict>
+				<key>FSName</key>
+				<string>ntfs3g</string>
+				<key>FSfileObjectsAreCaseSensitive</key>
+				<false/>
+				<!-- TODO(verify): FSProbeOrder 是否存在于本地键,抢在内置只读 NTFS 前 -->
+			</dict>
+		</dict>
+
+		<key>FSRequiresSecurityScopedPathURLResources</key>
+		<true/>
+		<key>FSShortName</key>
+		<string>ntfs3g</string>
+		<key>FSSupportsBlockResources</key>
+		<true/>
+		<key>FSSupportsGenericURLResources</key>
+		<false/>
+		<key>FSSupportsPathURLs</key>
+		<false/>
+		<key>FSSupportsServerURLs</key>
+		<false/>
+	</dict>
+</dict>
+</plist>

@@ -1,0 +1,32 @@
+name: usbrw-engine
+options:
+  bundleIdPrefix: com.usbrw
+  createIntermediateGroups: true
+targets:
+  ntfs3g:
+    # FSKit 文件系统模块引擎(单目标,无宿主 app——源码交付专用规格)
+    type: extensionkit-extension
+    platform: macOS
+    sources:
+      - path: src/ntfs3g
+        excludes: ["probe", "resources"]
+      - path: src/ntfs3g/resources
+        buildPhase: resources
+      - path: src/SharedSettings.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.usbrw.app.ntfs3g
+        PRODUCT_NAME: ntfs3g
+        INFOPLIST_FILE: src/ntfs3g/Info.plist
+        CODE_SIGN_ENTITLEMENTS: src/ntfs3g/ntfs3g.entitlements
+        GENERATE_INFOPLIST_FILE: NO
+        SWIFT_OBJC_BRIDGING_HEADER: src/ntfs3g/bridge/ntfs3g-Bridging-Header.h
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
+        HEADER_SEARCH_PATHS: ["$(PROJECT_DIR)/build/libntfs/include", "$(PROJECT_DIR)/build/libext2fs/include"]
+        LIBRARY_SEARCH_PATHS: ["$(PROJECT_DIR)/build/libntfs/lib", "$(PROJECT_DIR)/build/libext2fs/lib"]
+        OTHER_LDFLAGS: ["-lntfs-3g", "-lext2fs", "-lcom_err", "-lextjournal", "-lblkid", "-luuid"]
+        GCC_PREPROCESSOR_DEFINITIONS: ["HAVE_CONFIG_H=1"]
+        GCC_C_LANGUAGE_STANDARD: gnu11
+        CLANG_ENABLE_MODULES: YES
+        ARCHS: ["arm64", "x86_64"]
+        EXCLUDED_ARCHS: []
